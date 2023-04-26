@@ -44,6 +44,13 @@ impl HttpServer {
         let response = match route.as_str() {
             "GET /" => self.handle_get_root(),
             "POST /users" => self.handle_post_users(&request),
+            _ if self
+                .static_files
+                .contains_key(&request.path.replace("/", "")) =>
+            {
+                let file = &request.path.replace("/", "");
+                self.handle_static_file(file)
+            }
             _ => self.handle_not_found(),
         };
 
@@ -69,6 +76,16 @@ impl HttpServer {
             "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
             username.len(),
             username
+        )
+    }
+
+    fn handle_static_file(&self, file: &str) -> String {
+        let content = self.static_files.get(file).unwrap();
+        let content_length = content.len();
+
+        format!(
+            "HTTP/1.1 200 OK\r\nContent-Length:{}\r\n\r\n{}",
+            content_length, content
         )
     }
 
