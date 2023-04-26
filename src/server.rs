@@ -5,15 +5,9 @@ use std::net::{TcpListener, TcpStream};
 
 use super::http::HttpRequest;
 
-#[derive(Hash, PartialEq, Eq)]
-enum StaticFile {
-    Index,
-    NotFound,
-}
-
 pub struct HttpServer {
     listener: TcpListener,
-    static_files: HashMap<StaticFile, String>,
+    static_files: HashMap<String, String>,
     messages: HashMap<String, String>,
 }
 
@@ -55,7 +49,7 @@ impl HttpServer {
     }
 
     fn handle_get_root(&self, _request: &HttpRequest) -> String {
-        let content = self.static_files.get(&StaticFile::Index).unwrap();
+        let content = self.static_files.get("index.html").unwrap();
         let content_length = content.len();
 
         format!(
@@ -75,7 +69,7 @@ impl HttpServer {
     }
 
     fn handle_not_found(&self) -> String {
-        let content = self.static_files.get(&StaticFile::NotFound).unwrap();
+        let content = self.static_files.get("404.html").unwrap();
         let content_length = content.len();
 
         format!(
@@ -85,14 +79,16 @@ impl HttpServer {
     }
 }
 
-fn load_static_files() -> HashMap<StaticFile, String> {
+fn load_static_files() -> HashMap<String, String> {
     let mut map = HashMap::new();
 
-    let index = std::fs::read_to_string("static/index.html").unwrap();
-    map.insert(StaticFile::Index, index);
-
-    let not_found = std::fs::read_to_string("static/404.html").unwrap();
-    map.insert(StaticFile::NotFound, not_found);
+    let paths = std::fs::read_dir("static/").unwrap();
+    for path in paths {
+        let path = path.unwrap().path();
+        let index = std::fs::read_to_string(&path).unwrap();
+        let filename = path.file_name().unwrap().to_string_lossy().to_string();
+        map.insert(filename, index);
+    }
 
     map
 }
