@@ -1,2 +1,17 @@
-# simple-chat-room-rs
-HTTP-based simple chat room in pure Rust
+# Simple Chat Room
+
+Simple HTTP-based chat room written in pure Rust.
+
+## Getting Started
+
+Build server with
+
+```bash
+cargo build
+```
+
+Run server with
+
+```bash
+./target/debug/chat
+```

@@ -1,0 +1,9 @@
+[package]
+name = "chat"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4.17"
+simple_logger = "4.1.0"
+urlencoding = "2.1.2"
