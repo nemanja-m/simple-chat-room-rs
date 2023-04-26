@@ -1,4 +1,4 @@
-use log::{debug, error};
+use log::error;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::Read;
@@ -54,8 +54,6 @@ pub struct HttpRequest {
 impl HttpRequest {
     pub fn from(stream: &TcpStream) -> HttpRequest {
         let request = read_request(stream);
-        debug!("{request}\n\n");
-
         let method = parse_method(&request);
         let path = parse_path(&request);
         let content_type = parse_content_type(&request);

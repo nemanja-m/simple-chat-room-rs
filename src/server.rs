@@ -3,44 +3,46 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 
-use super::http::HttpRequest;
+use crate::http::HttpRequest;
+use crate::room::ChatRoom;
 
 pub struct HttpServer {
-    listener: TcpListener,
+    chat_room: ChatRoom,
     static_files: HashMap<String, String>,
-    messages: HashMap<String, String>,
 }
 
 impl HttpServer {
-    pub fn bind(host: &str, port: usize) -> Self {
-        let address = format!("{}:{}", host, port);
-        let listener = TcpListener::bind(address.as_str()).unwrap();
+    pub fn build() -> Self {
+        let chat_room = ChatRoom::new();
         let static_files = load_static_files();
 
         HttpServer {
-            listener,
+            chat_room,
             static_files,
-            messages: HashMap::new(),
         }
     }
 
-    pub fn start(&self) {
+    pub fn start(&mut self, host: &str, port: usize) {
+        let address = format!("{}:{}", host, port);
+        let listener = TcpListener::bind(address.as_str()).unwrap();
+
         info!(
             "Listening at {} for connections",
-            self.listener.local_addr().unwrap()
+            listener.local_addr().unwrap()
         );
-        for stream in self.listener.incoming() {
+
+        for stream in listener.incoming() {
             let stream = stream.unwrap();
             self.handle_request(stream);
         }
     }
 
-    fn handle_request(&self, mut stream: TcpStream) {
+    fn handle_request(&mut self, mut stream: TcpStream) {
         let request = HttpRequest::from(&stream);
         let route = request.route();
 
         let response = match route.as_str() {
-            "GET /" => self.handle_get_root(&request),
+            "GET /" => self.handle_get_root(),
             "POST /users" => self.handle_post_users(&request),
             _ => self.handle_not_found(),
         };
@@ -48,23 +50,25 @@ impl HttpServer {
         stream.write_all(response.as_bytes()).unwrap();
     }
 
-    fn handle_get_root(&self, _request: &HttpRequest) -> String {
+    fn handle_get_root(&self) -> String {
         let content = self.static_files.get("index.html").unwrap();
-        let content_length = content.len();
 
         format!(
-            "HTTP/1.1 200 OK\r\nContent-Length:{}\r\n\r\n{}",
-            content_length, content
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
+            content.len(),
+            content
         )
     }
 
-    fn handle_post_users(&self, request: &HttpRequest) -> String {
-        let content = request.query_params.get("username").unwrap();
-        let content_length = content.len();
+    fn handle_post_users(&mut self, request: &HttpRequest) -> String {
+        let username = request.query_params.get("username").unwrap().trim();
+
+        self.chat_room.add_user(username);
 
         format!(
-            "HTTP/1.1 200 OK\r\nContent-Length:{}\r\n\r\n{}",
-            content_length, content
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
+            username.len(),
+            username
         )
     }
 
