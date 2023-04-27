@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
     <title>Rust Chat Room</title>
     <link rel="stylesheet" href="chat.css">
 </head>
@@ -34,7 +35,7 @@
 
                     response.users.forEach((user) => {
                         const item = document.createElement("li");
-                        item.appendChild(document.createTextNode(user));
+                        item.appendChild(document.createTextNode(`${user} 🟢`));
                         activeUsers.appendChild(item);
                     })
                 });
