@@ -42,14 +42,14 @@
 </head>
 
 <body>
-    <form id="usernameForm" method="post" action="/chat">
+    <form id="username-form" method="post" action="/chat">
         <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="off"
             autofocus="on">
         <input type="submit" value="Enter">
     </form>
 
     <script>
-        const usernameForm = document.getElementById("usernameForm");
+        const usernameForm = document.getElementById("username-form");
 
         usernameForm.addEventListener("submit", (event) => {
             const element = document.getElementById("username");

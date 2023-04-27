@@ -48,7 +48,7 @@ body {
     overflow-y: scroll;
 }
 
-#chat-input {
+#chat-form {
     display: flex;
     flex-direction: row;
     width: 75vw;
@@ -56,7 +56,7 @@ body {
     margin-left: 10px;
 }
 
-#chat-input input[type="text"] {
+#chat-form input[type="text"] {
     flex: 1;
     padding: 5px;
     font-size: 16px;
@@ -66,7 +66,7 @@ body {
     outline: none;
 }
 
-#chat-input input[type="submit"] {
+#chat-form input[type="submit"] {
     padding: 5px 10px;
     font-size: 16px;
     font-weight: bold;
@@ -79,21 +79,35 @@ body {
 }
 
 /* CSS for chat message design */
-.chat-message {
+.chat-message-container {
     display: flex;
     flex-direction: row;
-    align-items: center;
-    margin-bottom: 10px;
+    width: 95vw;
+    align-items: flex-start;
+    margin-bottom: 15px;
 }
 
-.chat-message .sender {
+.chat-message {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 10px;
+}
+
+.chat-message-header {
+    height: 20px;
+}
+
+.chat-message-header .sender {
+    line-height: 20px;
+    vertical-align: middle;
     font-weight: bold;
-    margin-right: 10px;
-    width: 5rem;
 }
 
-.chat-message .time {
+.chat-message-header .time {
+    line-height: 20px;
+    vertical-align: middle;
     font-size: 12px;
     color: #999;
-    margin-right: 10px;
+    margin-left: 5px;
 }

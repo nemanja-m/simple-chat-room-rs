@@ -2,9 +2,10 @@ use log::info;
 use std::collections::HashMap;
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::http::HttpRequest;
-use crate::room::ChatRoom;
+use crate::room::{ChatRoom, Message};
 
 pub struct HttpServer {
     chat_room: ChatRoom,
@@ -42,13 +43,15 @@ impl HttpServer {
         let route = request.route();
 
         // GET /users are polling requests.
-        if &route != "GET /users" {
+        if &route != "GET /users" && &route != "GET /messages" {
             info!("{route}");
         }
 
         let response = match route.as_str() {
             "GET /" => self.handle_get_root(),
             "GET /users" => self.handle_get_users(),
+            "GET /messages" => self.handle_get_messages(),
+            "POST /messages" => self.handle_post_messages(&request),
             "POST /chat" => self.handle_enter_chat(&request),
             "POST /chat/exit" => self.handle_exit_chat(&request),
             _ if self
@@ -82,6 +85,53 @@ impl HttpServer {
         let content = format!("{{\"users\": [{}]}}", users.trim());
 
         format_http_response(200, "OK", &content, "application/json")
+    }
+
+    fn handle_get_messages(&self) -> String {
+        let messages = self
+            .chat_room
+            .get_messages()
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(",");
+
+        let content = format!("{{\"messages\": [{}]}}", messages.trim());
+
+        format_http_response(200, "OK", &content, "application/json")
+    }
+
+    fn handle_post_messages(&mut self, request: &HttpRequest) -> String {
+        let sender = request
+            .query_params
+            .get("sender")
+            .unwrap()
+            .trim()
+            .to_string();
+
+        let content = request
+            .query_params
+            .get("content")
+            .unwrap()
+            .trim()
+            .to_string();
+
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+
+        let message = Message {
+            timestamp,
+            sender,
+            content,
+        };
+
+        info!("Message: {}", &message);
+
+        self.chat_room.add_message(message);
+
+        format_http_response(200, "OK", "", "text/plain")
     }
 
     fn handle_enter_chat(&mut self, request: &HttpRequest) -> String {

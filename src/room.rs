@@ -1,10 +1,20 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, fmt::Display};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Message {
-    pub ts: usize,
-    pub user: String,
-    pub message: String,
+    pub timestamp: u128,
+    pub sender: String,
+    pub content: String,
+}
+
+impl Display for Message {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{{\"timestamp\":{},\"sender\":\"{}\",\"content\":\"{}\"}}",
+            self.timestamp, self.sender, self.content
+        )
+    }
 }
 
 pub struct ChatRoom {
@@ -40,7 +50,7 @@ impl ChatRoom {
 
     pub fn get_messages(&self) -> Vec<Message> {
         let mut messages = self.messages.to_vec();
-        messages.sort_by(|a, b| b.ts.cmp(&a.ts));
+        messages.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
         messages
     }
 }
@@ -53,27 +63,27 @@ mod tests {
     fn it_sorts_messages_by_timestamp() {
         let mut room = ChatRoom::new();
         room.add_message(Message {
-            ts: 1,
-            user: String::from("user"),
-            message: String::from("test"),
+            timestamp: 1,
+            sender: String::from("user"),
+            content: String::from("test"),
         });
         room.add_message(Message {
-            ts: 2,
-            user: String::from("user"),
-            message: String::from("test"),
+            timestamp: 2,
+            sender: String::from("user"),
+            content: String::from("test"),
         });
 
         let actual = room.get_messages();
         let expected = vec![
             Message {
-                ts: 2,
-                user: String::from("user"),
-                message: String::from("test"),
+                timestamp: 2,
+                sender: String::from("user"),
+                content: String::from("test"),
             },
             Message {
-                ts: 1,
-                user: String::from("user"),
-                message: String::from("test"),
+                timestamp: 1,
+                sender: String::from("user"),
+                content: String::from("test"),
             },
         ];
 

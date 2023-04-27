@@ -15,21 +15,13 @@
         </div>
         <div class="chat">
             <div id="chat-messages">
-                <div class="chat-message">
-                    <span class="time">10:00</span>
-                    <span class="sender">Anna:</span>
-                    <span class="message">Hello, how are you?</span>
-                </div>
-                <div class="chat-message">
-                    <span class="time">10:05</span>
-                    <span class="sender">Bob:</span>
-                    <span class="message">I'm doing well, thanks for asking. How about you?</span>
-                </div>
             </div>
-            <div id="chat-input">
-                <input type="text" id="message-input" placeholder="Type your message here...">
-                <input type="submit" id="send-button" value="Send">
-            </div>
+
+            <form id="chat-form">
+                <input type="text" id="message-input" placeholder="Type your message here..." autocomplete="off"
+                    autofocus="on">
+                <input type="submit" id="send-button" value="Send" onclick="clearMessageInput(this)">
+            </form>
         </div>
     </div>
     <script>
@@ -39,6 +31,7 @@
                 .then(response => {
                     const activeUsers = document.getElementById("active-users");
                     activeUsers.innerHTML = ""; // Remove all child elements.
+
                     response.users.forEach((user) => {
                         const item = document.createElement("li");
                         item.appendChild(document.createTextNode(user));
@@ -46,6 +39,76 @@
                     })
                 });
         }, 1000);
+
+        setInterval(() => {
+            fetch('/messages')
+                .then(response => response.json())
+                .then(response => {
+                    const chatMessages = document.getElementById("chat-messages");
+                    chatMessages.innerHTML = ""; // Remove all child elements.
+
+                    response.messages.forEach((payload) => {
+                        const { timestamp, sender, content } = payload;
+                        const time = new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+                        const containerElement = document.createElement("div");
+                        containerElement.classList.add("chat-message-container");
+
+                        const avatarElement = document.createElement("img");
+                        avatarElement.src = `https://api.dicebear.com/6.x/bottts-neutral/svg?seed=${encodeURIComponent(sender)}&size=40`;
+
+                        containerElement.appendChild(avatarElement);
+
+                        const messageElement = document.createElement("div");
+                        messageElement.classList.add("chat-message");
+
+                        const messageHeaderElement = document.createElement("div");
+                        messageHeaderElement.classList.add("chat-message-header");
+
+                        const senderItem = document.createElement("span");
+                        senderItem.classList.add("sender");
+                        senderItem.appendChild(document.createTextNode(sender));
+
+                        const timestampItem = document.createElement("span");
+                        timestampItem.classList.add("time");
+                        timestampItem.appendChild(document.createTextNode(time));
+
+                        messageHeaderElement.appendChild(senderItem);
+                        messageHeaderElement.appendChild(timestampItem);
+
+                        messageElement.appendChild(messageHeaderElement);
+
+                        const messageItem = document.createElement("span");
+                        messageItem.classList.add("message");
+                        messageItem.appendChild(document.createTextNode(content));
+
+                        messageElement.appendChild(messageItem);
+                        containerElement.appendChild(messageElement);
+                        chatMessages.appendChild(containerElement);
+                    })
+                });
+        }, 1000);
+
+        document.getElementById("chat-form").addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            const sender = localStorage.getItem("username");
+            const content = document.getElementById("message-input").value.trim();
+
+            fetch('/messages', {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                method: 'POST',
+                body: new URLSearchParams({
+                    sender,
+                    content
+                }),
+            });
+
+        });
+
+        function clearMessageInput(event) {
+            document.getElementById("message-input").innerHTML = "";
+        }
 
         window.onunload = () => {
             const username = localStorage.getItem("username");
