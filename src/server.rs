@@ -41,12 +41,16 @@ impl HttpServer {
         let request = HttpRequest::from(&stream);
         let route = request.route();
 
-        info!("{route}");
+        // GET /users are polling requests.
+        if &route != "GET /users" {
+            info!("{route}");
+        }
 
         let response = match route.as_str() {
             "GET /" => self.handle_get_root(),
             "GET /users" => self.handle_get_users(),
             "POST /chat" => self.handle_enter_chat(&request),
+            "POST /chat/exit" => self.handle_exit_chat(&request),
             _ if self
                 .static_files
                 .contains_key(&request.path.replace("/", "")) =>
@@ -88,6 +92,14 @@ impl HttpServer {
         let content = self.static_files.get("chat.html").unwrap();
 
         format_http_response(200, "OK", content, "text/html")
+    }
+
+    fn handle_exit_chat(&mut self, request: &HttpRequest) -> String {
+        let username = request.query_params.get("username").unwrap().trim();
+        self.chat_room.remove_user(username);
+        info!("User {username} exited chat room");
+
+        format_http_response(200, "OK", "", "text/plain")
     }
 
     fn handle_static_file(&self, file: &str) -> String {

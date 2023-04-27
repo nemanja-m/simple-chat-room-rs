@@ -46,6 +46,18 @@
                     })
                 });
         }, 1000);
+
+        window.onunload = () => {
+            const username = localStorage.getItem("username");
+
+            fetch('/chat/exit', {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                method: 'POST',
+                body: new URLSearchParams({
+                    username
+                }),
+            });
+        };
     </script>
 </body>
 
