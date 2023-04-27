@@ -53,14 +53,23 @@
 
         usernameForm.addEventListener("submit", (event) => {
             const element = document.getElementById("username");
+            const rawUsername = element.value.trim();
 
-            // Add random suffix to username to prevent collision.
-            const userId = Math.floor(1000 + Math.random() * 9000);
-            const username = `${element.value}#${userId}`;
+            var username;
+            const cachedUsername = localStorage.getItem("username");
+
+            if (!!cachedUsername && (cachedUsername.startsWith(`${rawUsername}#`) || cachedUsername === rawUsername)) {
+                username = cachedUsername;
+            } else {
+                // Add random suffix to username to prevent collision.
+                const userId = Math.floor(1000 + Math.random() * 9000);
+                username = `${rawUsername}#${userId}`;
+
+                // Keep user 'logged in'.
+                localStorage.setItem("username", username);
+            }
+
             element.value = username;
-
-            // Keep user 'logged in'.
-            localStorage.setItem("username", username);
         });
     </script>
 </body>
