@@ -41,9 +41,12 @@ impl HttpServer {
         let request = HttpRequest::from(&stream);
         let route = request.route();
 
+        info!("{route}");
+
         let response = match route.as_str() {
             "GET /" => self.handle_get_root(),
-            "POST /users" => self.handle_post_users(&request),
+            "GET /users" => self.handle_get_users(),
+            "POST /chat" => self.handle_enter_chat(&request),
             _ if self
                 .static_files
                 .contains_key(&request.path.replace("/", "")) =>
@@ -58,25 +61,33 @@ impl HttpServer {
     }
 
     fn handle_get_root(&self) -> String {
-        let content = self.static_files.get("index.html").unwrap();
+        let content = self.static_files.get("login.html").unwrap();
 
-        format!(
-            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
-            content.len(),
-            content
-        )
+        format_http_response(200, "OK", content, "text/html")
     }
 
-    fn handle_post_users(&mut self, request: &HttpRequest) -> String {
+    fn handle_get_users(&self) -> String {
+        let users = self
+            .chat_room
+            .get_active_users()
+            .iter()
+            .map(|&user| format!("\"{}\"", user.clone()))
+            .collect::<Vec<_>>()
+            .join(",");
+
+        let content = format!("{{\"users\": [{}]}}", users.trim());
+
+        format_http_response(200, "OK", &content, "application/json")
+    }
+
+    fn handle_enter_chat(&mut self, request: &HttpRequest) -> String {
         let username = request.query_params.get("username").unwrap().trim();
-
         self.chat_room.add_user(username);
+        info!("User {username} entered chat room");
 
-        format!(
-            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
-            username.len(),
-            username
-        )
+        let content = self.static_files.get("chat.html").unwrap();
+
+        format_http_response(200, "OK", content, "text/html")
     }
 
     fn handle_static_file(&self, file: &str) -> String {
@@ -112,4 +123,20 @@ fn load_static_files() -> HashMap<String, String> {
     }
 
     map
+}
+
+fn format_http_response(
+    status_code: usize,
+    message: &str,
+    content: &str,
+    content_type: &str,
+) -> String {
+    format!(
+        "HTTP/1.1 {} {}\r\nContent-Type: {}\r\nContent-Length: {}\r\n\r\n{}",
+        status_code,
+        message,
+        content_type,
+        content.len(),
+        content
+    )
 }

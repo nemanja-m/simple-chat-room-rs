@@ -88,12 +88,14 @@ fn read_request(mut stream: &TcpStream) -> String {
     }
 
     // Append the header to the request
-    let request = String::from_utf8_lossy(&buffer).to_string();
+    let request = String::from_utf8_lossy(&buffer)
+        .trim_matches(char::from(0)) // Remove null characters caused by large buffer.
+        .to_string();
 
     request
 }
 
-fn parse_method(header: &String) -> HttpMethod {
+fn parse_method(header: &str) -> HttpMethod {
     header
         .lines()
         .next()
@@ -105,7 +107,7 @@ fn parse_method(header: &String) -> HttpMethod {
         .unwrap()
 }
 
-fn parse_path(header: &String) -> String {
+fn parse_path(header: &str) -> String {
     let parts: Vec<_> = header.lines().next().unwrap().split(' ').collect();
 
     if parts.len() < 2 {
@@ -115,11 +117,11 @@ fn parse_path(header: &String) -> String {
     parts[1].to_string()
 }
 
-fn parse_content_type(header: &String) -> Option<ContentType> {
+fn parse_content_type(header: &str) -> Option<ContentType> {
     header_value(header, "Content-Type").map(|value| ContentType::from(value))
 }
 
-fn parse_form_url_encoded_params(header: &String) -> HashMap<String, String> {
+fn parse_form_url_encoded_params(header: &str) -> HashMap<String, String> {
     let parts = header.split("\r\n\r\n");
     let encoded_params = parts.last().unwrap();
 
@@ -134,7 +136,7 @@ fn parse_form_url_encoded_params(header: &String) -> HashMap<String, String> {
         .collect()
 }
 
-fn header_value(request_header: &String, key: &str) -> Option<String> {
+fn header_value(request_header: &str, key: &str) -> Option<String> {
     let pattern = format!("\r\n{}: ", key);
 
     match request_header.find(pattern.as_str()) {

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Rust Chat Room</title>
+    <link rel="stylesheet" href="chat.css">
+</head>
+
+<body>
+    <div id="chat-container">
+        <div id="chat-users">
+            <h3>Active Users</h3>
+            <ul id="active-users">
+            </ul>
+        </div>
+        <div class="chat">
+            <div id="chat-messages">
+                <div class="chat-message">
+                    <span class="time">10:00</span>
+                    <span class="sender">Anna:</span>
+                    <span class="message">Hello, how are you?</span>
+                </div>
+                <div class="chat-message">
+                    <span class="time">10:05</span>
+                    <span class="sender">Bob:</span>
+                    <span class="message">I'm doing well, thanks for asking. How about you?</span>
+                </div>
+            </div>
+            <div id="chat-input">
+                <input type="text" id="message-input" placeholder="Type your message here...">
+                <input type="submit" id="send-button" value="Send">
+            </div>
+        </div>
+    </div>
+    <script>
+        setInterval(() => {
+            fetch('/users')
+                .then(response => response.json())
+                .then(response => {
+                    const activeUsers = document.getElementById("active-users");
+                    activeUsers.innerHTML = ""; // Remove all child elements.
+                    response.users.forEach((user) => {
+                        const item = document.createElement("li");
+                        item.appendChild(document.createTextNode(user));
+                        activeUsers.appendChild(item);
+                    })
+                });
+        }, 1000);
+    </script>
+</body>
+
+</html>

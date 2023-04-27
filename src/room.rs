@@ -1,17 +1,14 @@
 use std::collections::HashSet;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct User(String);
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Message {
     pub ts: usize,
-    pub user: User,
+    pub user: String,
     pub message: String,
 }
 
 pub struct ChatRoom {
-    active_users: HashSet<User>,
+    active_users: HashSet<String>,
     messages: Vec<Message>,
 }
 
@@ -24,15 +21,17 @@ impl ChatRoom {
     }
 
     pub fn add_user(&mut self, username: &str) {
-        self.active_users.insert(User(username.to_string()));
+        self.active_users.insert(username.to_string());
     }
 
     pub fn remove_user(&mut self, username: &str) {
-        self.active_users.remove(&User(username.to_string()));
+        self.active_users.remove(&username.to_string());
     }
 
-    pub fn get_active_users(&self) -> &HashSet<User> {
-        &self.active_users
+    pub fn get_active_users(&self) -> Vec<&String> {
+        let mut users = self.active_users.iter().collect::<Vec<_>>();
+        users.sort();
+        users
     }
 
     pub fn add_message(&mut self, message: Message) {
@@ -48,19 +47,19 @@ impl ChatRoom {
 
 #[cfg(test)]
 mod tests {
-    use super::{ChatRoom, Message, User};
+    use super::{ChatRoom, Message};
 
     #[test]
     fn it_sorts_messages_by_timestamp() {
         let mut room = ChatRoom::new();
         room.add_message(Message {
             ts: 1,
-            user: User(String::from("user")),
+            user: String::from("user"),
             message: String::from("test"),
         });
         room.add_message(Message {
             ts: 2,
-            user: User(String::from("user")),
+            user: String::from("user"),
             message: String::from("test"),
         });
 
@@ -68,12 +67,12 @@ mod tests {
         let expected = vec![
             Message {
                 ts: 2,
-                user: User(String::from("user")),
+                user: String::from("user"),
                 message: String::from("test"),
             },
             Message {
                 ts: 1,
-                user: User(String::from("user")),
+                user: String::from("user"),
                 message: String::from("test"),
             },
         ];

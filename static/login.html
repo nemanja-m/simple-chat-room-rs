@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Rust Chat Room</title>
+    <style>
+        /* Center the form on the page */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Style the input field and button */
+        input[type=text] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-right: 5px;
+            width: 200px;
+        }
+
+        input[type=submit] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Style the form label */
+        label {
+            font-size: 16px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <form id="usernameForm" method="post" action="/chat">
+        <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="off"
+            autofocus="on">
+        <input type="submit" value="Enter">
+    </form>
+
+    <script>
+        const usernameForm = document.getElementById("usernameForm");
+
+        usernameForm.addEventListener("submit", (event) => {
+            const element = document.getElementById("username");
+
+            // Add random suffix to username to prevent collision.
+            const userId = Math.floor(1000 + Math.random() * 9000);
+            const username = `${element.value}#${userId}`;
+            element.value = username;
+
+            // Keep user 'logged in'.
+            localStorage.setItem("username", username);
+        });
+    </script>
+</body>
+
+</html>
