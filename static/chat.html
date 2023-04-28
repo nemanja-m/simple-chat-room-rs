@@ -39,7 +39,7 @@
                         activeUsers.appendChild(item);
                     })
                 });
-        }, 1000);
+        }, 200);
 
         setInterval(() => {
             fetch('/messages')
@@ -88,7 +88,7 @@
                         chatMessages.appendChild(containerElement);
                     })
                 });
-        }, 1000);
+        }, 200);
 
         document.getElementById("chat-form").addEventListener("submit", (event) => {
             event.preventDefault();
@@ -103,13 +103,11 @@
                     sender,
                     content
                 }),
+            }).then((_response) => {
+                document.getElementById("chat-form").reset();
             });
 
         });
-
-        function clearMessageInput(event) {
-            document.getElementById("message-input").innerHTML = "";
-        }
 
         window.onunload = () => {
             const username = localStorage.getItem("username");
