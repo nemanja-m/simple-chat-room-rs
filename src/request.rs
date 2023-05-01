@@ -19,7 +19,7 @@ pub struct HttpRequest<T: State> {
 
 impl<T: State> HttpRequest<T> {
     pub fn new(tcp_stream: &TcpStream, static_files: StaticFiles, state: T) -> HttpRequest<T> {
-        let request = read_request(tcp_stream);
+        let request = read_raw_request(tcp_stream);
         let method = parse_method(&request);
         let path = parse_path(&request);
         let content_type = parse_content_type(&request);
@@ -43,7 +43,7 @@ impl<T: State> HttpRequest<T> {
     }
 }
 
-fn read_request(mut stream: &TcpStream) -> String {
+fn read_raw_request(mut stream: &TcpStream) -> String {
     // Hard-coded request size is good enough for demo purposes.
     // Parsing will fail if request size is larger than buffer.
     let mut buffer = [0; 4096];

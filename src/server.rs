@@ -1,4 +1,4 @@
-use log::info;
+use log::{info, warn};
 
 use std::io::Write;
 use std::net::{TcpListener, ToSocketAddrs};
@@ -26,18 +26,23 @@ impl HttpServer {
         let static_files = StaticFiles::new();
         let thread_pool = ThreadPool::new(num_threads);
 
-        for stream in listener.incoming() {
-            let mut stream = stream.unwrap();
+        for connection in listener.incoming() {
+            match connection {
+                Ok(mut stream) => {
+                    let static_files = static_files.clone();
+                    let state = state.clone();
 
-            let static_files = static_files.clone();
-            let state = state.clone();
+                    thread_pool.execute(move || {
+                        let request = HttpRequest::new(&stream, static_files, state);
+                        let response = handle_request(&request);
 
-            thread_pool.execute(move || {
-                let request = HttpRequest::new(&stream, static_files, state);
-                let response = handle_request(&request);
-
-                stream.write_all(response.as_bytes()).unwrap();
-            });
+                        if let Err(message) = stream.write_all(response.as_bytes()) {
+                            warn!("Failed to write to TCP stream: {}", message);
+                        }
+                    });
+                }
+                Err(message) => warn!("Failed to read TCP stream: {}", message),
+            }
         }
     }
 }
