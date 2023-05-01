@@ -1,4 +1,3 @@
-use log::error;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::Read;
@@ -10,7 +9,7 @@ use crate::state::{State, StaticFiles};
 
 pub struct HttpRequest<T: State> {
     pub method: HttpMethod,
-    pub path: String,
+    pub path: Option<String>,
     pub content_type: Option<ContentType>,
     pub form_data: HashMap<String, String>,
     pub static_files: StaticFiles,
@@ -39,7 +38,11 @@ impl<T: State> HttpRequest<T> {
     }
 
     pub fn route(&self) -> String {
-        format!("{} {}", self.method, self.path)
+        format!(
+            "{} {}",
+            self.method,
+            self.path.clone().unwrap_or(String::from("-"))
+        )
     }
 }
 
@@ -64,25 +67,24 @@ fn read_raw_request(mut stream: &TcpStream) -> String {
 }
 
 fn parse_method(header: &str) -> HttpMethod {
+    match header.lines().next() {
+        Some(line) => line
+            .split(' ')
+            .next()
+            .map(ToString::to_string)
+            .map(HttpMethod::from)
+            .unwrap_or(HttpMethod::None),
+        None => HttpMethod::None,
+    }
+}
+
+fn parse_path(header: &str) -> Option<String> {
     header
         .lines()
         .next()
-        .unwrap()
-        .split(' ')
-        .next()
+        .map(|line| line.split(' ').nth(1))
+        .flatten()
         .map(ToString::to_string)
-        .map(HttpMethod::from)
-        .unwrap()
-}
-
-fn parse_path(header: &str) -> String {
-    let parts: Vec<_> = header.lines().next().unwrap().split(' ').collect();
-
-    if parts.len() < 2 {
-        error!("{}", header);
-    }
-
-    parts[1].to_string()
 }
 
 fn parse_content_type(header: &str) -> Option<ContentType> {

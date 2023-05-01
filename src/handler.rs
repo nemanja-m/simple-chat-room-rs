@@ -108,7 +108,11 @@ fn handle_exit_chat<T: State>(request: &HttpRequest<T>) -> String {
 }
 
 fn handle_static_files<T: State>(request: &HttpRequest<T>) -> String {
-    let key = request.path.replace("/", "");
+    let key = request
+        .path
+        .as_ref()
+        .map(|path| path.replace("/", ""))
+        .unwrap_or(String::from(""));
 
     if request.static_files.contains_key(&key) {
         let content = request.static_files.get(&key).unwrap();
