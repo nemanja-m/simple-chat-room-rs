@@ -78,3 +78,28 @@ impl Worker {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use super::ThreadPool;
+
+    #[test]
+    fn it_coordinates_worker_threads() {
+        let num_threads = 4;
+        let pool = ThreadPool::new(num_threads);
+
+        let counter = Arc::new(Mutex::new(0));
+
+        for _ in 0..num_threads {
+            let counter = Arc::clone(&counter);
+            pool.execute(move || (*counter.lock().unwrap()) += 1);
+        }
+
+        // By dropping thread pool, worker threads are joined.
+        drop(pool);
+
+        assert_eq!(num_threads, *counter.lock().unwrap());
+    }
+}

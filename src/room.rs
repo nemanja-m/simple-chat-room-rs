@@ -63,12 +63,12 @@ mod tests {
     fn it_sorts_messages_by_timestamp() {
         let mut room = ChatRoom::new();
         room.add_message(Message {
-            timestamp: 1,
+            timestamp: 2,
             sender: String::from("user"),
             content: String::from("test"),
         });
         room.add_message(Message {
-            timestamp: 2,
+            timestamp: 1,
             sender: String::from("user"),
             content: String::from("test"),
         });
@@ -76,12 +76,12 @@ mod tests {
         let actual = room.get_messages();
         let expected = vec![
             Message {
-                timestamp: 2,
+                timestamp: 1,
                 sender: String::from("user"),
                 content: String::from("test"),
             },
             Message {
-                timestamp: 1,
+                timestamp: 2,
                 sender: String::from("user"),
                 content: String::from("test"),
             },
