@@ -19,7 +19,7 @@ impl HttpServer {
         let listener = TcpListener::bind(address).unwrap();
 
         info!(
-            "Listening at {} for connections",
+            "Listening at http://{}/ for connections",
             listener.local_addr().unwrap()
         );
 
