@@ -107,9 +107,9 @@ fn parse_form_url_encoded_params(header: &str) -> HashMap<String, String> {
 }
 
 fn header_value(request_header: &str, key: &str) -> Option<String> {
-    let pattern = format!("\r\n{}: ", key);
+    let pattern = format!("\r\n{}: ", key.to_lowercase());
 
-    match request_header.find(pattern.as_str()) {
+    match request_header.to_lowercase().find(pattern.as_str()) {
         Some(index) => {
             let start = index + pattern.len();
             let end = request_header[start..].find('\r').unwrap() + start;

@@ -66,7 +66,6 @@ fn handle_get_messages<T: State>(request: &HttpRequest<T>) -> String {
 
 fn handle_post_messages<T: State>(request: &HttpRequest<T>) -> String {
     let sender = request.form_data.get("sender").unwrap().trim().to_string();
-
     let content = request.form_data.get("content").unwrap().trim().to_string();
 
     let timestamp = SystemTime::now()
