@@ -32,7 +32,7 @@ fn handle_get_users<T: State>(request: &HttpRequest<T>) -> String {
     let offline_users = users_to_json_array(&request.state.offline_users());
 
     let content = format!(
-        "{{\"users\": {{\"online\": [{}], \"offline\": [{}]}}}}",
+        "{{\"users\": {{\"online\": {}, \"offline\": {}}}}}",
         online_users.trim(),
         offline_users.trim()
     );

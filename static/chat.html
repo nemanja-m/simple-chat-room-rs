@@ -36,10 +36,13 @@
                     const onlineUsers = document.getElementById("online-users");
                     onlineUsers.innerHTML = ""; // Remove all child elements.
 
+                    const username = localStorage.getItem("username");
+
                     response.users.online.forEach((user) => {
                         const item = document.createElement("li");
                         const userSpan = document.createElement("span");
-                        userSpan.appendChild(document.createTextNode(`${user} `));
+                        const userText = user === username ? user + " [me]" : user;
+                        userSpan.appendChild(document.createTextNode(`${userText} `));
                         const statusSpan = document.createElement("span");
                         statusSpan.appendChild(document.createTextNode("◼"));
                         statusSpan.style.color = "green";
@@ -73,6 +76,8 @@
                     const chatMessages = document.getElementById("chat-messages");
                     chatMessages.innerHTML = ""; // Remove all child elements.
 
+                    const username = localStorage.getItem("username");
+
                     response.messages.forEach((payload) => {
                         const { timestamp, sender, content } = payload;
                         const time = new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -93,7 +98,7 @@
 
                         const senderItem = document.createElement("span");
                         senderItem.classList.add("sender");
-                        senderItem.appendChild(document.createTextNode(sender));
+                        senderItem.appendChild(document.createTextNode(sender === username ? "me" : sender));
 
                         const timestampItem = document.createElement("span");
                         timestampItem.classList.add("time");
