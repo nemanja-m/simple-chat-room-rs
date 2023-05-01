@@ -1,4 +1,3 @@
-use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use log::info;
@@ -6,11 +5,11 @@ use log::info;
 use crate::request::HttpRequest;
 use crate::state::{Message, State};
 
-pub fn handle_request<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
+pub fn handle_request<T: State>(request: &HttpRequest<T>) -> String {
     let route = request.route();
 
     let response = match route.as_str() {
-        "GET /" => handle_get_root(&request),
+        "GET /" => handle_get_root(request),
         "GET /users" => handle_get_users(&request),
         "GET /messages" => handle_get_messages(&request),
         "POST /messages" => handle_post_messages(&request),
@@ -22,20 +21,18 @@ pub fn handle_request<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
     response
 }
 
-fn handle_get_root<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
+fn handle_get_root<T: State>(request: &HttpRequest<T>) -> String {
     let content = request.static_files.get("login.html").unwrap();
 
     format_http_response(200, "OK", content, "text/html")
 }
 
-fn handle_get_users<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
+fn handle_get_users<T: State>(request: &HttpRequest<T>) -> String {
     let users = request
         .state
-        .lock()
-        .unwrap()
         .online_users()
         .iter()
-        .map(|&user| format!("\"{}\"", user.clone()))
+        .map(|user| format!("\"{}\"", user))
         .collect::<Vec<_>>()
         .join(",");
 
@@ -44,11 +41,9 @@ fn handle_get_users<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
     format_http_response(200, "OK", &content, "application/json")
 }
 
-fn handle_get_messages<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
+fn handle_get_messages<T: State>(request: &HttpRequest<T>) -> String {
     let messages = request
         .state
-        .lock()
-        .unwrap()
         .messages()
         .iter()
         .map(ToString::to_string)
@@ -60,7 +55,7 @@ fn handle_get_messages<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
     format_http_response(200, "OK", &content, "application/json")
 }
 
-fn handle_post_messages<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
+fn handle_post_messages<T: State>(request: &HttpRequest<T>) -> String {
     let sender = request
         .query_params
         .get("sender")
@@ -88,14 +83,14 @@ fn handle_post_messages<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
 
     info!("Message: {}", &message);
 
-    request.state.lock().unwrap().add_message(message);
+    request.state.add_message(message);
 
     format_http_response(200, "OK", "", "text/plain")
 }
 
-fn handle_enter_chat<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
+fn handle_enter_chat<T: State>(request: &HttpRequest<T>) -> String {
     let username = request.query_params.get("username").unwrap().trim();
-    request.state.lock().unwrap().add_user(username);
+    request.state.add_user(username);
 
     info!("User {username} entered chat room");
 
@@ -104,16 +99,16 @@ fn handle_enter_chat<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
     format_http_response(200, "OK", content, "text/html")
 }
 
-fn handle_exit_chat<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
+fn handle_exit_chat<T: State>(request: &HttpRequest<T>) -> String {
     let username = request.query_params.get("username").unwrap().trim();
-    request.state.lock().unwrap().remove_user(username);
+    request.state.remove_user(username);
 
     info!("User {username} exited chat room");
 
     format_http_response(200, "OK", "", "text/plain")
 }
 
-fn handle_static_files<T: State>(request: &HttpRequest<Mutex<T>>) -> String {
+fn handle_static_files<T: State>(request: &HttpRequest<T>) -> String {
     let key = request.path.replace("/", "");
 
     if request.static_files.contains_key(&key) {

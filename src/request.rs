@@ -6,23 +6,19 @@ use std::net::TcpStream;
 
 use urlencoding::decode;
 
-use crate::data::Data;
+use crate::state::{State, StaticFiles};
 
-pub struct HttpRequest<T: ?Sized> {
+pub struct HttpRequest<T: State> {
     pub method: HttpMethod,
     pub path: String,
     pub content_type: Option<ContentType>,
     pub query_params: HashMap<String, String>,
-    pub static_files: Data<HashMap<String, String>>,
-    pub state: Data<T>,
+    pub static_files: StaticFiles,
+    pub state: T,
 }
 
-impl<T: ?Sized> HttpRequest<T> {
-    pub fn new(
-        tcp_stream: &TcpStream,
-        static_files: Data<HashMap<String, String>>,
-        state: Data<T>,
-    ) -> HttpRequest<T> {
+impl<T: State> HttpRequest<T> {
+    pub fn new(tcp_stream: &TcpStream, static_files: StaticFiles, state: T) -> HttpRequest<T> {
         let request = read_request(tcp_stream);
         let method = parse_method(&request);
         let path = parse_path(&request);

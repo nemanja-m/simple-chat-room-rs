@@ -1,14 +1,11 @@
 use log::info;
-use std::collections::HashMap;
 
 use std::io::Write;
 use std::net::{TcpListener, ToSocketAddrs};
-use std::sync::Mutex;
 
-use crate::data::Data;
 use crate::handler::handle_request;
 use crate::request::HttpRequest;
-use crate::state::ChatRoom;
+use crate::state::{StaticFiles, ThreadSafeChatRoom};
 use crate::thread_pool::ThreadPool;
 
 pub struct HttpServer;
@@ -25,10 +22,9 @@ impl HttpServer {
             listener.local_addr().unwrap()
         );
 
+        let state = ThreadSafeChatRoom::new();
+        let static_files = StaticFiles::new();
         let thread_pool = ThreadPool::new(num_threads);
-
-        let static_files = Data::new(load_static_files());
-        let state = Data::new(Mutex::new(ChatRoom::new()));
 
         for stream in listener.incoming() {
             let mut stream = stream.unwrap();
@@ -44,18 +40,4 @@ impl HttpServer {
             });
         }
     }
-}
-
-fn load_static_files() -> HashMap<String, String> {
-    let mut map = HashMap::new();
-
-    let paths = std::fs::read_dir("static/").unwrap();
-    for path in paths {
-        let path = path.unwrap().path();
-        let index = std::fs::read_to_string(&path).unwrap();
-        let filename = path.file_name().unwrap().to_string_lossy().to_string();
-        map.insert(filename, index);
-    }
-
-    map
 }
