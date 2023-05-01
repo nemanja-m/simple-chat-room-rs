@@ -3,57 +3,27 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::Read;
 use std::net::TcpStream;
+
 use urlencoding::decode;
 
-#[derive(Debug)]
-pub enum HttpMethod {
-    Get,
-    Post,
-    None,
-}
+use crate::data::Data;
 
-impl From<String> for HttpMethod {
-    fn from(value: String) -> Self {
-        match value.as_str() {
-            "GET" => HttpMethod::Get,
-            "POST" => HttpMethod::Post,
-            _ => HttpMethod::None,
-        }
-    }
-}
-
-impl Display for HttpMethod {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", format!("{:?}", self).to_uppercase())
-    }
-}
-
-pub enum ContentType {
-    ApplicationFormUrlEncoded,
-    Html,
-    Json,
-    TextPlain,
-}
-
-impl From<String> for ContentType {
-    fn from(value: String) -> Self {
-        match value.as_str() {
-            "application/x-www-form-urlencoded" => ContentType::ApplicationFormUrlEncoded,
-            other => panic!("Invalid content type {}", other),
-        }
-    }
-}
-
-pub struct HttpRequest {
+pub struct HttpRequest<T: ?Sized> {
     pub method: HttpMethod,
     pub path: String,
     pub content_type: Option<ContentType>,
     pub query_params: HashMap<String, String>,
+    pub static_files: Data<HashMap<String, String>>,
+    pub state: Data<T>,
 }
 
-impl HttpRequest {
-    pub fn from(stream: &TcpStream) -> HttpRequest {
-        let request = read_request(stream);
+impl<T: ?Sized> HttpRequest<T> {
+    pub fn new(
+        tcp_stream: &TcpStream,
+        static_files: Data<HashMap<String, String>>,
+        state: Data<T>,
+    ) -> HttpRequest<T> {
+        let request = read_request(tcp_stream);
         let method = parse_method(&request);
         let path = parse_path(&request);
         let content_type = parse_content_type(&request);
@@ -67,6 +37,8 @@ impl HttpRequest {
             path,
             content_type,
             query_params,
+            static_files,
+            state,
         }
     }
 
@@ -147,5 +119,44 @@ fn header_value(request_header: &str, key: &str) -> Option<String> {
             p
         }
         None => None,
+    }
+}
+
+#[derive(Debug)]
+pub enum HttpMethod {
+    Get,
+    Post,
+    None,
+}
+
+impl From<String> for HttpMethod {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "GET" => HttpMethod::Get,
+            "POST" => HttpMethod::Post,
+            _ => HttpMethod::None,
+        }
+    }
+}
+
+impl Display for HttpMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", format!("{:?}", self).to_uppercase())
+    }
+}
+
+pub enum ContentType {
+    ApplicationFormUrlEncoded,
+    Html,
+    Json,
+    TextPlain,
+}
+
+impl From<String> for ContentType {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "application/x-www-form-urlencoded" => ContentType::ApplicationFormUrlEncoded,
+            other => panic!("Invalid content type {}", other),
+        }
     }
 }
