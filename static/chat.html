@@ -10,8 +10,11 @@
 <body>
     <div id="chat-container">
         <div id="chat-users">
-            <h3>Active Users</h3>
-            <ul id="active-users">
+            <h3>Online</h3>
+            <ul id="online-users">
+            </ul>
+            <h3 style="margin-top: 2rem;">Offline</h3>
+            <ul id="offline-users">
             </ul>
         </div>
         <div class="chat">
@@ -21,7 +24,7 @@
             <form id="chat-form">
                 <input type="text" id="message-input" placeholder="Type your message here..." autocomplete="off"
                     autofocus="on">
-                <input type="submit" id="send-button" value="Send" onclick="clearMessageInput(this)">
+                <input type="submit" id="send-button" value="Send">
             </form>
         </div>
     </div>
@@ -30,13 +33,35 @@
             fetch('/users')
                 .then(response => response.json())
                 .then(response => {
-                    const activeUsers = document.getElementById("active-users");
-                    activeUsers.innerHTML = ""; // Remove all child elements.
+                    const onlineUsers = document.getElementById("online-users");
+                    onlineUsers.innerHTML = ""; // Remove all child elements.
 
-                    response.users.forEach((user) => {
+                    response.users.online.forEach((user) => {
                         const item = document.createElement("li");
-                        item.appendChild(document.createTextNode(`${user} 🟢`));
-                        activeUsers.appendChild(item);
+                        const userSpan = document.createElement("span");
+                        userSpan.appendChild(document.createTextNode(`${user} `));
+                        const statusSpan = document.createElement("span");
+                        statusSpan.appendChild(document.createTextNode("◼"));
+                        statusSpan.style.color = "green";
+                        item.appendChild(userSpan);
+                        item.appendChild(statusSpan);
+                        onlineUsers.appendChild(item);
+                    })
+
+                    const offlineUsers = document.getElementById("offline-users");
+                    offlineUsers.innerHTML = ""; // Remove all child elements.
+
+                    response.users.offline.forEach((user) => {
+                        const item = document.createElement("li");
+                        const userSpan = document.createElement("span");
+                        userSpan.appendChild(document.createTextNode(`${user} `));
+                        userSpan.style.color = "gray";
+                        const statusSpan = document.createElement("span");
+                        statusSpan.appendChild(document.createTextNode("◼"));
+                        statusSpan.style.color = "gray";
+                        item.appendChild(userSpan);
+                        item.appendChild(statusSpan);
+                        offlineUsers.appendChild(item);
                     })
                 });
         }, 200);

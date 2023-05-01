@@ -12,7 +12,7 @@ pub struct HttpRequest<T: State> {
     pub method: HttpMethod,
     pub path: String,
     pub content_type: Option<ContentType>,
-    pub query_params: HashMap<String, String>,
+    pub form_data: HashMap<String, String>,
     pub static_files: StaticFiles,
     pub state: T,
 }
@@ -23,7 +23,7 @@ impl<T: State> HttpRequest<T> {
         let method = parse_method(&request);
         let path = parse_path(&request);
         let content_type = parse_content_type(&request);
-        let query_params = match content_type {
+        let form_data = match content_type {
             Some(ContentType::ApplicationFormUrlEncoded) => parse_form_url_encoded_params(&request),
             _ => HashMap::new(),
         };
@@ -32,7 +32,7 @@ impl<T: State> HttpRequest<T> {
             method,
             path,
             content_type,
-            query_params,
+            form_data,
             static_files,
             state,
         }

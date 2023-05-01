@@ -42,7 +42,7 @@ impl State for ThreadSafeChatRoom {
     }
 
     fn offline_users(&self) -> Vec<String> {
-        vec![]
+        self.0.lock().unwrap().offline_users()
     }
 
     fn add_message(&self, message: Message) {
@@ -56,33 +56,37 @@ impl State for ThreadSafeChatRoom {
 
 struct ChatRoom {
     online_users: HashSet<String>,
+    offline_users: HashSet<String>,
     messages: Vec<Message>,
 }
 
 impl ChatRoom {
-    pub fn new() -> Self {
+    fn new() -> Self {
         ChatRoom {
             online_users: HashSet::new(),
+            offline_users: HashSet::new(),
             messages: Vec::new(),
         }
     }
 
     fn add_user(&mut self, username: &str) {
-        self.online_users.insert(username.to_string());
+        let username = username.trim().to_string();
+        self.offline_users.remove(&username);
+        self.online_users.insert(username);
     }
 
     fn remove_user(&mut self, username: &str) {
-        self.online_users.remove(&username.to_string());
+        let username = username.trim().to_string();
+        self.online_users.remove(&username);
+        self.offline_users.insert(username);
     }
 
     fn online_users(&self) -> Vec<String> {
-        let mut users = self
-            .online_users
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>();
-        users.sort();
-        users
+        sort_users(&self.online_users)
+    }
+
+    fn offline_users(&self) -> Vec<String> {
+        sort_users(&self.offline_users)
     }
 
     fn add_message(&mut self, message: Message) {
@@ -94,6 +98,12 @@ impl ChatRoom {
         messages.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
         messages
     }
+}
+
+fn sort_users(users: &HashSet<String>) -> Vec<String> {
+    let mut users = users.iter().map(ToString::to_string).collect::<Vec<_>>();
+    users.sort();
+    users
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

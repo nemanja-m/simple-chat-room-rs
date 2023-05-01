@@ -28,17 +28,26 @@ fn handle_get_root<T: State>(request: &HttpRequest<T>) -> String {
 }
 
 fn handle_get_users<T: State>(request: &HttpRequest<T>) -> String {
-    let users = request
-        .state
-        .online_users()
+    let online_users = users_to_json_array(&request.state.online_users());
+    let offline_users = users_to_json_array(&request.state.offline_users());
+
+    let content = format!(
+        "{{\"users\": {{\"online\": [{}], \"offline\": [{}]}}}}",
+        online_users.trim(),
+        offline_users.trim()
+    );
+
+    format_http_response(200, "OK", &content, "application/json")
+}
+
+fn users_to_json_array(users: &Vec<String>) -> String {
+    let users = users
         .iter()
         .map(|user| format!("\"{}\"", user))
         .collect::<Vec<_>>()
         .join(",");
 
-    let content = format!("{{\"users\": [{}]}}", users.trim());
-
-    format_http_response(200, "OK", &content, "application/json")
+    format!("[{}]", users)
 }
 
 fn handle_get_messages<T: State>(request: &HttpRequest<T>) -> String {
@@ -56,19 +65,9 @@ fn handle_get_messages<T: State>(request: &HttpRequest<T>) -> String {
 }
 
 fn handle_post_messages<T: State>(request: &HttpRequest<T>) -> String {
-    let sender = request
-        .query_params
-        .get("sender")
-        .unwrap()
-        .trim()
-        .to_string();
+    let sender = request.form_data.get("sender").unwrap().trim().to_string();
 
-    let content = request
-        .query_params
-        .get("content")
-        .unwrap()
-        .trim()
-        .to_string();
+    let content = request.form_data.get("content").unwrap().trim().to_string();
 
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -89,7 +88,7 @@ fn handle_post_messages<T: State>(request: &HttpRequest<T>) -> String {
 }
 
 fn handle_enter_chat<T: State>(request: &HttpRequest<T>) -> String {
-    let username = request.query_params.get("username").unwrap().trim();
+    let username = request.form_data.get("username").unwrap().trim();
     request.state.add_user(username);
 
     info!("User {username} entered chat room");
@@ -100,7 +99,7 @@ fn handle_enter_chat<T: State>(request: &HttpRequest<T>) -> String {
 }
 
 fn handle_exit_chat<T: State>(request: &HttpRequest<T>) -> String {
-    let username = request.query_params.get("username").unwrap().trim();
+    let username = request.form_data.get("username").unwrap().trim();
     request.state.remove_user(username);
 
     info!("User {username} exited chat room");
