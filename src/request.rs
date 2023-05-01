@@ -3,6 +3,7 @@ use std::fmt::Display;
 use std::io::Read;
 use std::net::TcpStream;
 
+use log::debug;
 use urlencoding::decode;
 
 use crate::state::{State, StaticFiles};
@@ -63,6 +64,8 @@ fn read_raw_request(mut stream: &TcpStream) -> String {
         .trim_matches(char::from(0)) // Remove null characters caused by large buffer.
         .to_string();
 
+    debug!("{request}");
+
     request
 }
 
@@ -99,9 +102,15 @@ fn parse_form_url_encoded_params(header: &str) -> HashMap<String, String> {
         .split("&")
         .map(|pair| {
             let kv: Vec<_> = pair.split('=').collect();
-            let key = kv[0].to_string();
-            let value = decode(kv[1]).expect("UTF-8").to_string().replace("+", " ");
-            (key, value)
+
+            if kv.len() != 2 {
+                debug!("Request: {}", header);
+                ("".to_string(), "".to_string())
+            } else {
+                let key = kv[0].to_string();
+                let value = decode(kv[1]).expect("UTF-8").to_string().replace("+", " ");
+                (key, value)
+            }
         })
         .collect()
 }
