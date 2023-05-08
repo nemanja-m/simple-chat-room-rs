@@ -116,7 +116,9 @@
                         messageElement.appendChild(messageItem);
                         containerElement.appendChild(messageElement);
                         chatMessages.appendChild(containerElement);
-                    })
+                    });
+
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
                 });
         }, 200);
 
